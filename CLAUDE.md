@@ -10,9 +10,11 @@
 https://m-vokhm.github.io/Quadruple/src/main/javadoc/com/mvohm/quadruple/Quadruple.html
 
 - Maven, JMH 1.37, Java 17; `Quadruple` подключён зависимостью из локального репозитория Maven (сейчас 1.2.0).
-- `SimpleJmhBench.java` — JMH: сложение, вычитание, умножение, деление; `BigDecimal` (`MathContext` 38 цифр)
-  против `Quadruple` в статической и экземплярной форме. `SimpleNanoBench.java` — то же на `System.nanoTime()`.
-  `AuxMethods.java` — вывод.
+- `BenchData` — генератор операндов (фиксированный seed, наборы `NORMAL`, `WIDE_EXP`, `SUBNORMAL`, `SUBNORMAL_MIXED`).
+  `QuadArithmeticBench` — арифметика `Quadruple` (экземплярная `r.assign(a).op(b)` и статическая формы, базовый
+  `assign`); `BigDecimalArithmeticBench` — то же для `BigDecimal` (`MathContext` 38 цифр, только `NORMAL`/`WIDE_EXP`).
+  Вызов бенчмарка проходит массив из `SIZE` пар, `@OperationsPerInvocation(SIZE)`.
+  Старые `SimpleJmhBench`/`SimpleNanoBench`/`AuxMethods` удалены (2026-11-24).
 - Сборка `mvn package` → `target/benchmarks-<quadruple.version>.jar` (shade), запуск `java -jar target/benchmarks-1.2.1.jar`.
 - Результаты из README Quadruple (версия 1.2.0, OpenJDK 21.0.3, массивы 64K и 4M элементов) получены `SimpleJmhBench`.
 
