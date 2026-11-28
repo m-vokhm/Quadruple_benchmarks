@@ -9,10 +9,12 @@
 экземпляр) и формы с аргументами `long`/`double`. Документация API:
 https://m-vokhm.github.io/Quadruple/src/main/javadoc/com/mvohm/quadruple/Quadruple.html
 
-- Maven, JMH 1.37, Java 17; `Quadruple` подключён зависимостью из локального репозитория Maven (сейчас 1.2.0).
+- Maven, JMH 1.37, Java 17; `Quadruple` подключён зависимостью из локального репозитория Maven, версия — свойство `quadruple.version` (по умолчанию 1.2.1).
 - `BenchData` — генератор операндов (фиксированный seed, наборы `NORMAL`, `WIDE_EXP`, `SUBNORMAL`, `SUBNORMAL_MIXED`).
   `QuadArithmeticBench` — арифметика `Quadruple` (экземплярная `r.assign(a).op(b)` и статическая формы, базовый
   `assign`); `BigDecimalArithmeticBench` — то же для `BigDecimal` (`MathContext` 38 цифр, только `NORMAL`/`WIDE_EXP`).
+  `ConversionBench` — `assign(long/double/BigDecimal)` (в т.ч. субнормальные `double`, «длинные» 100-цифровые и
+  «короткие» до 19 цифр `BigDecimal`), `doubleValue()`, `bigDecimalValue()`, `toString()` (на `NORMAL`).
   Вызов бенчмарка проходит массив из `SIZE` пар, `@OperationsPerInvocation(SIZE)`.
   Старые `SimpleJmhBench`/`SimpleNanoBench`/`AuxMethods` удалены (2026-11-24).
 - Сборка `mvn package` → `target/benchmarks-<quadruple.version>.jar` (shade), запуск `java -jar target/benchmarks-1.2.1.jar`.

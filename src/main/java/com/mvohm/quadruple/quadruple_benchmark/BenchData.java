@@ -95,6 +95,66 @@ public final class BenchData {
     return new Operands(first, second);
   }
 
+  // Distinct seeds for the source values of conversions, so that each array is independent of the others
+  private static final long SEED_LONGS = SEED + 101, SEED_DOUBLES = SEED + 102,
+                            SEED_SUBNORMAL_DOUBLES = SEED + 103, SEED_SHORT_BIG_DECIMALS = SEED + 104;
+
+  /**
+   * Random non-zero {@code long} values with random signs and with the bit lengths
+   * uniformly distributed over 1..63, so that all shift distances in {@code assign(long)} occur equally often.
+   */
+  public static long[] randomLongs(int size) {
+    final Random rand = new Random(SEED_LONGS);
+    final long[] result = new long[size];
+    for (int i = 0; i < size; i++)
+      result[i] = randomSigned(rand, randomOfBitLength(rand, 1 + rand.nextInt(63)));
+    return result;
+  }
+
+  /** Random normal {@code double} values: random signs, random 52-bit mantissas, exponents over the whole normal range. */
+  public static double[] randomNormalDoubles(int size) {
+    final Random rand = new Random(SEED_DOUBLES);
+    final double[] result = new double[size];
+    for (int i = 0; i < size; i++) {
+      final long exponent = 1 + rand.nextInt(0x7FE);        // biased exponent of double, 1..0x7FE
+      final long mantissa = rand.nextLong() >>> 12;          // 52 bits
+      result[i] = randomSigned(rand, Double.longBitsToDouble(exponent << 52 | mantissa));
+    }
+    return result;
+  }
+
+  /** Random subnormal {@code double} values: random signs, non-zero mantissas with bit lengths uniform over 1..52. */
+  public static double[] randomSubnormalDoubles(int size) {
+    final Random rand = new Random(SEED_SUBNORMAL_DOUBLES);
+    final double[] result = new double[size];
+    for (int i = 0; i < size; i++)
+      result[i] = randomSigned(rand, Double.longBitsToDouble(randomOfBitLength(rand, 1 + rand.nextInt(52))));
+    return result;
+  }
+
+  /**
+   * "Short" decimal numbers, as they usually come from users: random unscaled values of 1..63 bits (up to 19 digits),
+   * random signs, decimal scales in the range -20..20 (e.g. {@code 123.45}, {@code 6.02E+23}).
+   */
+  public static BigDecimal[] shortBigDecimals(int size) {
+    final Random rand = new Random(SEED_SHORT_BIG_DECIMALS);
+    final BigDecimal[] result = new BigDecimal[size];
+    for (int i = 0; i < size; i++) {
+      final long unscaled = randomSigned(rand, randomOfBitLength(rand, 1 + rand.nextInt(63)));
+      result[i] = BigDecimal.valueOf(unscaled, rand.nextInt(41) - 20);
+    }
+    return result;
+  }
+
+  /** A random positive value whose highest set bit is bit {@code bitLength - 1} (bitLength 1..63). */
+  private static long randomOfBitLength(Random rand, int bitLength) {
+    final long highBit = 1L << (bitLength - 1);
+    return highBit | (rand.nextLong() & (highBit - 1));
+  }
+
+  private static long randomSigned(Random rand, long value)       { return rand.nextBoolean() ? -value : value; }
+  private static double randomSigned(Random rand, double value)   { return rand.nextBoolean() ? -value : value; }
+
   /** Returns new instances holding the absolute values of the given ones (e.g. as arguments for {@code sqrt}). */
   public static Quadruple[] absValues(Quadruple[] values) {
     final Quadruple[] result = new Quadruple[values.length];
