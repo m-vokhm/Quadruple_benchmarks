@@ -15,6 +15,8 @@ https://m-vokhm.github.io/Quadruple/src/main/javadoc/com/mvohm/quadruple/Quadrup
   `assign`); `BigDecimalArithmeticBench` — то же для `BigDecimal` (`MathContext` 38 цифр, только `NORMAL`/`WIDE_EXP`).
   `ConversionBench` — `assign(long/double/BigDecimal)` (в т.ч. субнормальные `double`, «длинные» 100-цифровые и
   «короткие» до 19 цифр `BigDecimal`), `doubleValue()`, `bigDecimalValue()`, `toString()` (на `NORMAL`).
+  `ParseBench` — `assign(String)` на наборах строк `ParseData.StringSet` (`SHORT`, `FULL`, `LONG`, `BIG_EXP`,
+  `SUBNORMAL`, `INTEGER`, `SPECIAL`); строки строятся из случайных цифр без участия Quadruple — одинаковы для любой версии.
   Вызов бенчмарка проходит массив из `SIZE` пар, `@OperationsPerInvocation(SIZE)`.
   Старые `SimpleJmhBench`/`SimpleNanoBench`/`AuxMethods` удалены (2026-11-24).
 - Сборка `mvn package` → `target/benchmarks-<quadruple.version>.jar` (shade), запуск `java -jar target/benchmarks-1.2.1.jar`.
@@ -42,7 +44,14 @@ https://m-vokhm.github.io/Quadruple/src/main/javadoc/com/mvohm/quadruple/Quadrup
 - **Мутабельная арифметика не должна выделять память в куче** — проверять профайлером `-prof gc`
   (`gc.alloc.rate.norm` ≈ 0 для экземплярных форм).
 
-## Известные проблемы текущего кода
+## Странности в производительности Quadruple (разобрать позже)
+
+- `assign(BigDecimal)`: «короткие» значения (до 19 цифр, scale −20..20) преобразуются **медленнее** «длинных»
+  (~98 цифр, точные значения `Quadruple`): ≈ 4.3 мкс против ≈ 2.5 мкс (1.2.1, пробный прогон 2026-11-28).
+  Возможные причины — округление неточных значений, более широкий диапазон двоичных порядков (±146 против ±64).
+- `sqrt` ≈ 500 нс — в 5 раз медленнее деления, почти не зависит от данных; возможная цель оптимизации.
+
+## Известные проблемы старого кода (до 2026-11, исправлены)
 
 - `@Setup(Level.Invocation)` при операциях в десятки наносекунд — JMH прямо предупреждает: накладные расходы
   и искажение времени сопоставимы с самой операцией. Обновление данных — на `Level.Iteration` или иначе.
